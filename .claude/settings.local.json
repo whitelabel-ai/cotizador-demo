@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=false --import-alias=\"@/*\" --no-turbopack)"
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=false --import-alias=\"@/*\" --no-turbopack)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "WebSearch",
+      "WebFetch(domain:www.zebra.com)",
+      "WebFetch(domain:www.amazon.com)",
+      "WebFetch(domain:commons.wikimedia.org)",
+      "WebFetch(domain:unsplash.com)",
+      "WebFetch(domain:upload.wikimedia.org)"
     ]
   }
 }
