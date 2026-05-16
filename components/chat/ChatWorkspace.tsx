@@ -85,7 +85,7 @@ export function ChatWorkspace({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <ScrollArea className="flex-1 min-h-0">
+      <ScrollArea className="flex-1">
         <div className="space-y-4 px-4 py-4">
           {messages.map((msg) => {
             if (msg.type === "product_card" && msg.productId) {

@@ -36,43 +36,11 @@ export const initialConversation: Conversation = {
   startedAt: "2024-04-29T14:35:00Z",
   messages: [
     {
-      id: "msg-001",
-      role: "customer",
-      type: "text",
-      content: "Hola, necesito cotizar 5 unidades de la referencia LD101.",
-      timestamp: "2024-04-29T14:35:12Z",
-    },
-    {
-      id: "msg-002",
+      id: "msg-000",
       role: "ai",
       type: "text",
-      content:
-        "Hola Carlos 👋 Claro, estoy validando disponibilidad y precio para Distribuciones Andina con tu lista Distribuidor Plus. Dame un momento.",
-      timestamp: "2024-04-29T14:35:18Z",
-    },
-    {
-      id: "msg-003",
-      role: "ai",
-      type: "product_card",
-      content: "Encontré la referencia LD101. Aquí tienes la información:",
-      timestamp: "2024-04-29T14:35:22Z",
-      productId: "prod-001",
-      metadata: { qty: 5 },
-    },
-    {
-      id: "msg-004",
-      role: "system",
-      type: "text",
-      content: "Conversación recuperada desde WhatsApp. Continuando en plataforma web.",
-      timestamp: "2024-04-29T14:38:00Z",
-    },
-    {
-      id: "msg-005",
-      role: "ai",
-      type: "text",
-      content:
-        "Carlos, ya tienes el espacio de cotización activo. Puedes agregar la LD101 a tu cotización, explorar alternativas o pedir productos complementarios. ¿Cómo seguimos?",
-      timestamp: "2024-04-29T14:38:05Z",
+      content: "¡Hola! Soy tu asistente comercial. Puedo ayudarte a cotizar productos, comparar alternativas, ver precios por volumen o conectarte con Laura Mendez. ¿Qué producto necesitas cotizar hoy?",
+      timestamp: "2024-04-29T14:35:00Z",
     },
   ],
 };

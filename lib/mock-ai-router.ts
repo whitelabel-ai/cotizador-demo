@@ -32,7 +32,7 @@ function detectIntent(text: string): AIIntent {
   const skuMatch = text.match(/[A-Z]{2,}\d{2,}[-\w]*/i);
   if (skuMatch) return "find_product";
 
-  if (/impresora|impresion|printer|zebra|ld101|zd220|slp/.test(lower)) return "find_product";
+  if (/impresora|impresion|printer|zebra|ld101|zd220|slp|label|direct/i.test(lower)) return "find_product";
   if (/lector|scanner|cajon|monedero/.test(lower)) return "find_product";
 
   return "unknown";
