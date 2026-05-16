@@ -9,8 +9,8 @@ import { ProductComparator } from "@/components/products/ProductComparator";
 import { ProductCard } from "@/components/products/ProductCard";
 import { MessageBubble, TypingIndicator } from "./MessageBubble";
 import { quickActions } from "@/data/conversations";
-import { getProductById } from "@/data/products";
-import { routeMessage } from "@/lib/mock-ai-router";
+import { getProductById, products } from "@/data/products";
+import { callGeminiAPI } from "@/lib/gemini-ai";
 import { generateId } from "@/lib/utils";
 import type { Message } from "@/data/conversations";
 import type { PriceList } from "@/data/customers";
@@ -69,11 +69,23 @@ export function ChatWorkspace({
       onRequestReview();
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 600));
-
-    const response = routeMessage(text, lastProductId);
-    setIsTyping(false);
-    onMessagesChange([...messages, userMsg, ...response.messages]);
+    try {
+      const response = await callGeminiAPI(text, messages, products, lastProductId);
+      setIsTyping(false);
+      onMessagesChange([...messages, userMsg, ...response.messages]);
+    } catch (error) {
+      console.error("Error en Gemini:", error);
+      setIsTyping(false);
+      // Fallback a mensaje de error
+      const errorMsg: Message = {
+        id: `msg-${generateId()}`,
+        role: "ai",
+        type: "text",
+        content: "Lo siento, tuve un problema de conexión. Por favor intenta de nuevo.",
+        timestamp: new Date().toISOString(),
+      };
+      onMessagesChange([...messages, userMsg, errorMsg]);
+    }
   }, [lastProductId, messages, onMessagesChange, onRequestReview]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
