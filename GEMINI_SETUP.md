@@ -108,9 +108,10 @@ Usuario: "¿Me puedes hacer mejor precio por 10 unidades?"
 ## Modelo utilizado
 
 - **Modelo**: Gemini 3.1 Flash Lite Preview
-- **Versión**: `gemini-3.1-flash-lite-preview`
-- **Temperatura**: 0.5 (más preciso y consistente para respuestas comerciales)
-- **Max tokens**: 2048
+- **Versión**: `gemini-3.1-flash-lite-preview-06-17`
+- **API Version**: v1alpha
+- **Temperatura**: 0.3 (alto enfoque y precisión para respuestas comerciales)
+- **Max tokens**: 4096
 - **Formato**: JSON forzado para parsing confiable
 
 ### Ventajas de Gemini 3.1 Flash Lite
@@ -120,6 +121,7 @@ Usuario: "¿Me puedes hacer mejor precio por 10 unidades?"
 - **Mejor comprensión** de contexto comercial B2B
 - **Respuestas más precisas** en español
 - **Ventana de contexto** ampliada
+- **TopK**: 32 para mejor balance entre diversidad y precisión
 
 ## Costos
 

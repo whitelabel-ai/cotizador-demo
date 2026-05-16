@@ -3,7 +3,7 @@ import type { Product } from "@/data/products";
 import { generateId } from "@/lib/utils";
 
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1alpha/models/gemini-3.1-flash-lite-preview-06-17:generateContent";
 
 export interface GeminiAIResponse {
   intent: string;
@@ -80,7 +80,8 @@ Reglas:
 - Si pide complementarios, usa "show_complementary" y proporciona productIds
 - Si pide descuento, usa "request_discount"
 - Sé conciso pero útil
-- Usa el contexto de la conversación`;
+- Usa el contexto de la conversación
+- Responde siempre en español`;
 
   try {
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
@@ -99,10 +100,10 @@ Reglas:
           },
         ],
         generationConfig: {
-          temperature: 0.5,
-          topK: 40,
+          temperature: 0.3,
+          topK: 32,
           topP: 0.95,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 4096,
           responseMimeType: "application/json",
         },
       }),
