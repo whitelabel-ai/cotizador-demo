@@ -3,7 +3,7 @@ import type { Product } from "@/data/products";
 import { generateId } from "@/lib/utils";
 
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent";
 
 export interface GeminiAIResponse {
   intent: string;
@@ -99,10 +99,10 @@ Reglas:
           },
         ],
         generationConfig: {
-          temperature: 0.7,
+          temperature: 0.5,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 2048,
           responseMimeType: "application/json",
         },
       }),

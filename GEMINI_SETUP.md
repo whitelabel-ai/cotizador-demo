@@ -107,15 +107,26 @@ Usuario: "¿Me puedes hacer mejor precio por 10 unidades?"
 
 ## Modelo utilizado
 
-- **Modelo**: Gemini 2.0 Flash
-- **Temperatura**: 0.7 (balance entre creatividad y precisión)
-- **Max tokens**: 1024
+- **Modelo**: Gemini 3.1 Flash Lite Preview
+- **Versión**: `gemini-3.1-flash-lite-preview`
+- **Temperatura**: 0.5 (más preciso y consistente para respuestas comerciales)
+- **Max tokens**: 2048
 - **Formato**: JSON forzado para parsing confiable
+
+### Ventajas de Gemini 3.1 Flash Lite
+
+- **Más rápido** que versiones anteriores
+- **Menor costo** optimizado para producción
+- **Mejor comprensión** de contexto comercial B2B
+- **Respuestas más precisas** en español
+- **Ventana de contexto** ampliada
 
 ## Costos
 
-Gemini 2.0 Flash tiene un costo aproximado de:
+Gemini 3.1 Flash Lite Preview tiene un costo aproximado:
 - $0.075 USD por 1M de tokens de entrada
 - $0.30 USD por 1M de tokens de salida
 
 Para uso en demo/prototipo, el costo es mínimo (< $1 USD por hora de uso intensivo).
+
+**Nota:** Los precios pueden variar. Consulta la [documentación oficial de Gemini](https://ai.google.dev/pricing) para información actualizada.
