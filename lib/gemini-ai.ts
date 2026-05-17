@@ -3,13 +3,14 @@ import type { Product } from "@/data/products";
 import { generateId } from "@/lib/utils";
 
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1alpha/models/gemini-3.1-flash-lite-preview-06-17:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1alpha/models/gemini-3.1-flash-lite:generateContent";
 
 export interface GeminiAIResponse {
   intent: string;
   messages: Message[];
   productId?: string;
   productIds?: string[];
+  showProductCard?: boolean;
 }
 
 function makeAIMsg(
@@ -66,16 +67,28 @@ Tu tarea:
 3. Responde de forma natural y comercial en español
 4. Si es apropiado, sugiere productos relevantes
 
+IMPORTANTE - Cuándo usar showProductCard:
+- Usa "showProductCard": true CUANDO el usuario pregunte por un producto específico o quieras mostrar los detalles completos de un producto
+- NO uses showProductCard cuando solo estés mencionando productos de pasada o dando recomendaciones generales
+- showProductCard debe ser true SOLO cuando quieras que aparezca la tarjeta visual del producto con precio, stock y botón de agregar
+
 Responde EXCLUSIVAMENTE en formato JSON con esta estructura:
 {
   "intent": "find_product" | "show_alternatives" | "show_complementary" | "request_discount" | "show_volume_pricing" | "show_quote" | "greeting" | "unknown",
   "responseText": "Tu respuesta natural en español",
   "productId": "id del producto si aplica",
-  "productIds": ["array de ids si es comparativa o complementarios"]
+  "productIds": ["array de ids si es comparativa o complementarios"],
+  "showProductCard": true o false
 }
 
+Ejemplos:
+- Usuario: "muéstrame la impresora BIXOLON" → showProductCard: true, productId: "prod-izc-001"
+- Usuario: "tienes lectores zebra?" → showProductCard: true, productId: "prod-izc-004"
+- Usuario: "hola, qué tienen?" → showProductCard: false (saludo general)
+- Usuario: "alternativas de este" → showProductCard: false, intent: "show_alternatives", productIds: [...]
+
 Reglas:
-- Si el usuario busca un producto, usa intent "find_product" y proporciona el productId
+- Si el usuario busca un producto específico, usa intent "find_product", showProductCard: true y proporciona el productId
 - Si pide alternativas, usa "show_alternatives" y proporciona productIds con el producto base + alternativas
 - Si pide complementarios, usa "show_complementary" y proporciona productIds
 - Si pide descuento, usa "request_discount"
@@ -127,7 +140,15 @@ Reglas:
 
     let additionalMessages: Message[] = [];
 
-    if (geminiResponse.intent === "find_product" && geminiResponse.productId) {
+    // Si Gemini quiere mostrar una tarjeta de producto
+    if (geminiResponse.showProductCard && geminiResponse.productId) {
+      additionalMessages.push(
+        makeAIMsg(`Producto: ${products.find((p) => p.id === geminiResponse.productId)?.name || ""}`, "product_card", {
+          productId: geminiResponse.productId,
+        })
+      );
+    } else if (geminiResponse.intent === "find_product" && geminiResponse.productId) {
+      // Fallback para find_product sin showProductCard explícito
       additionalMessages.push(
         makeAIMsg(`Producto cargado: ${products.find((p) => p.id === geminiResponse.productId)?.name || ""}`, "product_card", {
           productId: geminiResponse.productId,
@@ -154,6 +175,7 @@ Reglas:
       messages: [aiMessage, ...additionalMessages],
       productId: geminiResponse.productId,
       productIds: geminiResponse.productIds,
+      showProductCard: geminiResponse.showProductCard,
     };
   } catch (error) {
     console.error("Error calling Gemini API:", error);
