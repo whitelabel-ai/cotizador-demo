@@ -3,7 +3,7 @@ import type { Product } from "@/data/products";
 import { generateId } from "@/lib/utils";
 
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview-06-17:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent";
 
 export interface GeminiAIResponse {
   intent: string;
