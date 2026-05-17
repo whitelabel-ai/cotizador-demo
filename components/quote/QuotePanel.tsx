@@ -107,17 +107,19 @@ export function QuotePanel({
                 </p>
               </div>
             ) : (
-              <div className="flex-1 space-y-2 overflow-y-auto px-4 py-2">
-                {quote.items.map((item) => (
-                  <QuoteLineItem
-                    key={item.id}
-                    item={item}
-                    onQtyChange={onQtyChange}
-                    onRemove={onRemoveItem}
-                    onDiscountChange={onDiscountChange}
-                  />
-                ))}
-              </div>
+              <ScrollArea className="flex-1 px-4 py-2">
+                <div className="space-y-2">
+                  {quote.items.map((item) => (
+                    <QuoteLineItem
+                      key={item.id}
+                      item={item}
+                      onQtyChange={onQtyChange}
+                      onRemove={onRemoveItem}
+                      onDiscountChange={onDiscountChange}
+                    />
+                  ))}
+                </div>
+              </ScrollArea>
             )}
           </CardContent>
         </ScrollArea>
