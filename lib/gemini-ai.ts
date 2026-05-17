@@ -51,50 +51,41 @@ export async function callGeminiAPI(
     )
     .join("\n");
 
-  const prompt = `Eres un asistente comercial B2B especializado en productos de tecnología para punto de venta (POS), identificación y marcación, y seguridad electrónica de IZC Mayorista.
+  const prompt = `Eres un asistente comercial B2B especializado en productos de IZC Mayorista.
 
-Contexto de productos disponibles:
+PRODUCTOS DISPONIBLES:
 ${productsContext}
 
-Historial de conversación reciente:
+HISTORIAL:
 ${conversationHistory}
 
-Último mensaje del usuario: "${userText}"
+USUARIO DICE: "${userText}"
 
-Tu tarea:
-1. Analiza la intención del usuario (buscar producto, pedir descuento, ver alternativas, complementarios, etc.)
-2. Si el usuario menciona un producto específico (por SKU, nombre, marca o categoría), identifica el producto exacto
-3. Responde de forma natural y comercial en español
-4. Si es apropiado, sugiere productos relevantes
+INSTRUCCIONES:
+1. Responde en español de forma natural y comercial
+2. SI el usuario pregunta por un producto específico o quiere ver detalles → DEBES usar showProductCard: true
+3. Si solo es saludo o pregunta general → showProductCard: false
 
-IMPORTANTE - Cuándo usar showProductCard:
-- Usa "showProductCard": true CUANDO el usuario pregunte por un producto específico o quieras mostrar los detalles completos de un producto
-- NO uses showProductCard cuando solo estés mencionando productos de pasada o dando recomendaciones generales
-- showProductCard debe ser true SOLO cuando quieras que aparezca la tarjeta visual del producto con precio, stock y botón de agregar
-
-Responde EXCLUSIVAMENTE en formato JSON con esta estructura:
+FORMATO DE RESPUESTA OBLIGATORIO (JSON):
 {
-  "intent": "find_product" | "show_alternatives" | "show_complementary" | "request_discount" | "show_volume_pricing" | "show_quote" | "greeting" | "unknown",
-  "responseText": "Tu respuesta natural en español",
-  "productId": "id del producto si aplica",
-  "productIds": ["array de ids si es comparativa o complementarios"],
-  "showProductCard": true o false
+  "intent": "find_product" | "show_alternatives" | "show_complementary" | "request_discount" | "greeting" | "unknown",
+  "responseText": "tu respuesta en español",
+  "productId": "id del producto o null",
+  "showProductCard": true | false
 }
 
-Ejemplos:
-- Usuario: "muéstrame la impresora BIXOLON" → showProductCard: true, productId: "prod-izc-001"
-- Usuario: "tienes lectores zebra?" → showProductCard: true, productId: "prod-izc-004"
-- Usuario: "hola, qué tienen?" → showProductCard: false (saludo general)
-- Usuario: "alternativas de este" → showProductCard: false, intent: "show_alternatives", productIds: [...]
+REGLAS CRÍTICAS:
+- Si mencionas un producto POR NOMBRE o SKU → showProductCard: true
+- Si el usuario dice "muéstrame", "quiero ver", "dame información" de un producto → showProductCard: true
+- Si el usuario pregunta "tienes X?" o "qué hay de X?" → showProductCard: true
+- Solo showProductCard: false para saludos o preguntas muy generales
 
-Reglas:
-- Si el usuario busca un producto específico, usa intent "find_product", showProductCard: true y proporciona el productId
-- Si pide alternativas, usa "show_alternatives" y proporciona productIds con el producto base + alternativas
-- Si pide complementarios, usa "show_complementary" y proporciona productIds
-- Si pide descuento, usa "request_discount"
-- Sé conciso pero útil
-- Usa el contexto de la conversación
-- Responde siempre en español`;
+EJEMPLOS:
+- "dame info de la portátil" → {"intent": "find_product", "responseText": "La impresora portátil es...", "productId": "prod-izc-003", "showProductCard": true}
+- "tienes lectores zebra?" → {"intent": "find_product", "responseText": "Sí, tenemos...", "productId": "prod-izc-004", "showProductCard": true}
+- "hola, qué tal?" → {"intent": "greeting", "responseText": "¡Hola! ¿En qué puedo ayudarte?", "showProductCard": false}
+
+RESPONDE SOLO JSON:`;
 
   try {
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
