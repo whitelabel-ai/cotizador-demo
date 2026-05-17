@@ -20,7 +20,9 @@ import { Separator } from "@/components/ui/separator";
 import { defaultCustomer } from "@/data/customers";
 import { initialQuote, salesDashboardQuotes } from "@/data/quotes";
 import { calculateTotals } from "@/lib/quote-calculations";
+import { generateQuotePDF } from "@/lib/generate-quote-pdf";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { loadQuotes } from "@/lib/storage";
 import type { Quote } from "@/data/quotes";
 
 const statusConfig: Record<
@@ -38,11 +40,37 @@ const statusConfig: Record<
 export default function QuotePage({ params }: { params: Promise<{ quoteId: string }> }) {
   const router = useRouter();
   const { quoteId } = React.use(params);
-  const found = salesDashboardQuotes.find((quote) => quote.id === quoteId);
-  const quote = found ?? { ...initialQuote, status: "confirmed" as const };
+  const [quote, setQuote] = React.useState<Quote | null>(null);
   const customer = defaultCustomer;
+
+  React.useEffect(() => {
+    const savedQuotes = loadQuotes();
+    const found = savedQuotes.find((q) => q.id === quoteId);
+    
+    if (found) {
+      setQuote(found);
+    } else {
+      const demoFound = salesDashboardQuotes.find((q) => q.id === quoteId);
+      setQuote(demoFound ?? { ...initialQuote, status: "confirmed" as const });
+    }
+  }, [quoteId]);
+
+  if (!quote) {
+    return (
+      <div className="min-h-screen py-6">
+        <div className="ui-page-shell">
+          <p className="text-center">Cargando cotización...</p>
+        </div>
+      </div>
+    );
+  }
+
   const totals = calculateTotals(quote.items);
   const status = statusConfig[quote.status];
+
+  const handleDownload = () => {
+    generateQuotePDF(quote, customer);
+  };
 
   return (
     <div className="min-h-screen py-6">
@@ -61,7 +89,7 @@ export default function QuotePage({ params }: { params: Promise<{ quoteId: strin
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" className="gap-1.5">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownload}>
               <Download className="h-4 w-4" />
               Descargar PDF
             </Button>
@@ -246,7 +274,7 @@ export default function QuotePage({ params }: { params: Promise<{ quoteId: strin
                     Editar cotizacion
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" className="justify-between gap-2">
+                  <Button variant="outline" className="justify-between gap-2" onClick={handleDownload}>
                     Descargar PDF
                     <Download className="h-4 w-4" />
                   </Button>

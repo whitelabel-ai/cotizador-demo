@@ -3,12 +3,12 @@
 import React from "react";
 import {
   Building2,
-  ChevronDown,
-  ChevronRight,
-  Clock,
   MessageSquare,
+  MoreVertical,
   Plus,
   Shield,
+  Trash2,
+  Copy,
   User,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -16,6 +16,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Customer } from "@/data/customers";
 import type { Quote } from "@/data/quotes";
@@ -26,6 +32,9 @@ interface ConversationSidebarProps {
   activeQuoteId: string;
   onSelectQuote: (quoteId: string) => void;
   onNewConversation: () => void;
+  onDeleteQuote: (quoteId: string) => void;
+  onDuplicateQuote: (quoteId: string) => void;
+  onClearAll: () => void;
 }
 
 const typeLabels: Record<Customer["type"], string> = {
@@ -48,6 +57,9 @@ export function ConversationSidebar({
   activeQuoteId,
   onSelectQuote,
   onNewConversation,
+  onDeleteQuote,
+  onDuplicateQuote,
+  onClearAll,
 }: ConversationSidebarProps) {
   const [contextOpen, setContextOpen] = React.useState(true);
   const origin = originConfig[customer.origin];
@@ -72,35 +84,67 @@ export function ConversationSidebar({
             const timeAgo = formatDate(quote.createdAt);
 
             return (
-              <button
+              <div
                 key={quote.id}
-                onClick={() => onSelectQuote(quote.id)}
-                className={`w-full rounded-[var(--radius-16)] border px-3 py-2.5 text-left transition-colors ${
+                className={`group flex items-center gap-1 rounded-[var(--radius-16)] border px-3 py-2.5 text-left transition-colors ${
                   isActive
                     ? "border-[color:var(--border-accent)] bg-[var(--surface-accent)]"
                     : "border-[color:var(--border-default)] bg-[var(--surface-subtle)] hover:bg-[var(--bg-subtle)]"
                 }`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="ui-title truncate">{quote.number}</span>
-                      {quote.status === "commercial_review" && (
-                        <Badge variant="review" className="shrink-0 text-[10px]">
-                          Revision
-                        </Badge>
-                      )}
-                      {quote.status === "confirmed" && (
-                        <Badge variant="success" className="shrink-0 text-[10px]">
-                          Confirmada
-                        </Badge>
-                      )}
+                <button
+                  onClick={() => onSelectQuote(quote.id)}
+                  className="min-w-0 flex-1"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="ui-title truncate">{quote.number}</span>
+                        {quote.status === "commercial_review" && (
+                          <Badge variant="review" className="shrink-0 text-[10px]">
+                            Revision
+                          </Badge>
+                        )}
+                        {quote.status === "confirmed" && (
+                          <Badge variant="success" className="shrink-0 text-[10px]">
+                            Confirmada
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="ui-body-sm mt-1 truncate text-[var(--text-muted)]">{lastMessage}</p>
+                      <p className="ui-body-sm mt-1 text-[var(--text-muted)]">{timeAgo}</p>
                     </div>
-                    <p className="ui-body-sm mt-1 truncate text-[var(--text-muted)]">{lastMessage}</p>
-                    <p className="ui-body-sm mt-1 text-[var(--text-muted)]">{timeAgo}</p>
                   </div>
-                </div>
-              </button>
+                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      <MoreVertical className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onDuplicateQuote(quote.id)}>
+                      <Copy className="mr-2 h-3.5 w-3.5" />
+                      Duplicar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (confirm(`¿Borrar la cotización ${quote.number}?`)) {
+                          onDeleteQuote(quote.id);
+                        }
+                      }}
+                      className="text-[var(--status-critical-text)] focus:text-[var(--status-critical-text)]"
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                      Borrar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             );
           })}
         </div>
@@ -193,6 +237,22 @@ export function ConversationSidebar({
             </div>
           </div>
         )}
+
+        <div className="border-t border-[color:var(--border-default)] p-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2 text-[var(--status-critical-text)] hover:text-[var(--status-critical-text)]"
+            onClick={() => {
+              if (confirm("¿Estás seguro de que quieres borrar todas las cotizaciones y conversaciones? Esta acción no se puede deshacer.")) {
+                onClearAll();
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+            Limpiar todo
+          </Button>
+        </div>
       </ScrollArea>
 
       {!contextOpen && (

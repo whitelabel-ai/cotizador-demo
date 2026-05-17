@@ -18,11 +18,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { QuoteLineItem } from "./QuoteLineItem";
 import { calculateTotals } from "@/lib/quote-calculations";
+import { generateQuotePDF } from "@/lib/generate-quote-pdf";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Quote } from "@/data/quotes";
+import type { Customer } from "@/data/customers";
 
 interface QuotePanelProps {
   quote: Quote;
+  customer?: Customer;
   onQtyChange: (id: string, qty: number) => void;
   onRemoveItem: (id: string) => void;
   onDiscountChange: (id: string, discount: number) => void;
@@ -44,6 +47,7 @@ const statusConfig: Record<
 
 export function QuotePanel({
   quote,
+  customer,
   onQtyChange,
   onRemoveItem,
   onDiscountChange,
@@ -54,6 +58,14 @@ export function QuotePanel({
   const totals = calculateTotals(quote.items);
   const status = statusConfig[quote.status];
   const isEmpty = quote.items.length === 0;
+
+  const handleDownload = () => {
+    if (customer) {
+      generateQuotePDF(quote, customer);
+    } else {
+      console.warn("[QuotePanel] Customer no disponible para generar PDF");
+    }
+  };
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 p-4">
@@ -167,7 +179,7 @@ export function QuotePanel({
         )}
 
         <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => router.push(`/quote/${quote.id}`)}>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownload}>
             <Download className="h-3.5 w-3.5" />
             Descargar
           </Button>
