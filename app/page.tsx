@@ -1,370 +1,398 @@
 "use client";
 
-import Link from "next/link";
-import { motion } from "framer-motion";
+import React, { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
   BarChart3,
-  Bot,
-  Building2,
-  CheckCircle2,
-  FileText,
-  MessageSquare,
-  ShieldCheck,
-  Tag,
-  TrendingUp,
-  Zap,
-  type LucideIcon,
+  LayoutGrid,
+  Sparkles,
+  Users,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ConversationSidebar } from "@/components/customer/ConversationSidebar";
+import { ChatWorkspace } from "@/components/chat/ChatWorkspace";
+import { QuotePanel } from "@/components/quote/QuotePanel";
+import { defaultCustomer } from "@/data/customers";
+import { initialConversation } from "@/data/conversations";
+import { initialQuote, salesDashboardQuotes } from "@/data/quotes";
+import { getProductById } from "@/data/products";
+import { resolveUnitPrice } from "@/lib/pricing-engine";
+import { generateId } from "@/lib/utils";
+import type { Message } from "@/data/conversations";
+import type { Product } from "@/data/products";
+import type { Quote, QuoteLineItem } from "@/data/quotes";
 
-const journeys = [
+const demoQuotes: Quote[] = [
   {
-    href: "/continue/sess-wa-7f3k2m",
-    eyebrow: "Flujo principal",
-    title: "Continuar una conversacion desde WhatsApp",
-    description:
-      "Muestra como recuperamos contexto, cliente y oportunidad sin pedirle al comprador que reinicie el proceso en la web.",
-    proof: "Demuestra continuidad omnicanal y arranque con contexto comercial.",
-    buttonLabel: "Ver flujo WhatsApp a web",
-    icon: MessageSquare,
-    primary: true,
+    ...initialQuote,
+    id: "quote-001",
+    items: [],
+    lastIntent: "Nueva conversación",
   },
   {
-    href: "/workspace",
-    eyebrow: "Experiencia core",
-    title: "Abrir el workspace de cotizacion",
-    description:
-      "Entra al producto central: chat comercial, contexto del cliente, sugerencias de productos y cotizacion visible en un mismo espacio.",
-    proof: "Demuestra chat-first quoting y trabajo asistido por IA.",
-    buttonLabel: "Abrir workspace",
-    icon: Tag,
+    ...salesDashboardQuotes[0],
+    id: "quote-002",
+    lastIntent: "Cotización inicial — producto LD101",
   },
   {
-    href: "/sales",
-    eyebrow: "Operacion comercial",
-    title: "Revisar el dashboard del vendedor",
-    description:
-      "Expone pipeline, estados de cotizacion, seguimientos y solicitudes que requieren revision del equipo comercial.",
-    proof: "Demuestra visibilidad operativa despues de la conversacion.",
-    buttonLabel: "Ver dashboard comercial",
-    icon: BarChart3,
+    ...salesDashboardQuotes[1],
+    id: "quote-003",
+    lastIntent: "Solicitud de mejor precio",
   },
-] satisfies Array<{
-  href: string;
-  eyebrow: string;
-  title: string;
-  description: string;
-  proof: string;
-  buttonLabel: string;
-  icon: LucideIcon;
-  primary?: boolean;
-}>;
-
-const proofPoints = [
-  {
-    icon: Bot,
-    title: "La IA no es un chatbot generico",
-    description:
-      "Entiende intenciones comerciales, propone referencias, compara opciones y mueve la cotizacion hacia una accion concreta.",
-  },
-  {
-    icon: Building2,
-    title: "La cotizacion vive dentro del contexto",
-    description:
-      "Cliente, restricciones, precios, historial y quote builder conviven con la conversacion para evitar saltos de pantalla.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "El canal no se rompe",
-    description:
-      "La oportunidad puede empezar en WhatsApp, continuar en web y terminar en revision, envio o confirmacion comercial.",
-  },
-] satisfies Array<{
-  icon: LucideIcon;
-  title: string;
-  description: string;
-}>;
-
-const flowHighlights = [
-  {
-    icon: MessageSquare,
-    label: "Conversacion",
-    text: "La entrada al producto es una intencion comercial, no un catalogo plano.",
-  },
-  {
-    icon: Tag,
-    label: "Cotizacion activa",
-    text: "El quote builder siempre esta visible mientras se agregan productos y descuentos.",
-  },
-  {
-    icon: TrendingUp,
-    label: "Operacion",
-    text: "La experiencia termina en accion comercial, no en una conversacion sin salida.",
-  },
-] satisfies Array<{
-  icon: LucideIcon;
-  label: string;
-  text: string;
-}>;
+];
 
 export default function HomePage() {
+  const router = useRouter();
+  const customer = defaultCustomer;
+
+  const [quotes, setQuotes] = useState<Quote[]>(demoQuotes);
+  const [activeQuoteId, setActiveQuoteId] = useState<string>("quote-001");
+  const [messagesByQuote, setMessagesByQuote] = useState<Record<string, Message[]>>({
+    "quote-001": initialConversation.messages,
+    "quote-002": salesDashboardQuotes[0].items.length > 0 ? [
+      {
+        id: "msg-existing-1",
+        role: "ai",
+        type: "text",
+        content: "Cotización Q-2024-0924 creada con 5 unidades de LD101.",
+        timestamp: new Date().toISOString(),
+      },
+    ] : [],
+    "quote-003": [
+      {
+        id: "msg-existing-2",
+        role: "ai",
+        type: "text",
+        content: "Cotización Q-2024-0921 en revisión comercial.",
+        timestamp: new Date().toISOString(),
+      },
+    ],
+  });
+
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [mobileView, setMobileView] = useState("chat");
+
+  const activeQuote = quotes.find((q) => q.id === activeQuoteId) || quotes[0];
+  const activeMessages = messagesByQuote[activeQuoteId] || [];
+  const addedProductIds = activeQuote.items.map((item) => item.productId);
+
+  const handleAddToQuote = useCallback((product: Product, qty: number, unitPrice: number) => {
+    setQuotes((prev) => prev.map((quote) => {
+      if (quote.id !== activeQuoteId) return quote;
+
+      const existing = quote.items.find((item) => item.productId === product.id);
+      if (existing) {
+        return {
+          ...quote,
+          items: quote.items.map((item) =>
+            item.productId === product.id ? { ...item, qty: item.qty + qty } : item
+          ),
+        };
+      }
+
+      const newItem: QuoteLineItem = {
+        id: `li-${generateId()}`,
+        productId: product.id,
+        sku: product.sku,
+        name: product.name,
+        brand: product.brand,
+        qty,
+        unitPrice,
+        discountPercent: 0,
+        stock: product.visibleStock,
+      };
+
+      return { ...quote, items: [...quote.items, newItem] };
+    }));
+    setMobileView("quote");
+  }, [activeQuoteId]);
+
+  const handleQtyChange = useCallback((id: string, qty: number) => {
+    setQuotes((prev) => prev.map((quote) => {
+      if (quote.id !== activeQuoteId) return quote;
+
+      const updatedItems = quote.items.map((item) => {
+        if (item.id !== id) return item;
+        const product = getProductById(item.productId);
+        if (!product) return { ...item, qty };
+
+        const newPrice = resolveUnitPrice(product, customer.priceList, qty);
+        return { ...item, qty, unitPrice: newPrice };
+      });
+
+      return { ...quote, items: updatedItems };
+    }));
+  }, [activeQuoteId, customer.priceList]);
+
+  const handleRemoveItem = useCallback((id: string) => {
+    setQuotes((prev) => prev.map((quote) => 
+      quote.id === activeQuoteId 
+        ? { ...quote, items: quote.items.filter((item) => item.id !== id) }
+        : quote
+    ));
+  }, [activeQuoteId]);
+
+  const handleDiscountChange = useCallback((id: string, discount: number) => {
+    setQuotes((prev) => prev.map((quote) =>
+      quote.id === activeQuoteId
+        ? {
+            ...quote,
+            items: quote.items.map((item) =>
+              item.id === id ? { ...item, discountPercent: Math.min(30, Math.max(0, discount)) } : item
+            ),
+          }
+        : quote
+    ));
+  }, [activeQuoteId]);
+
+  const handleRequestReview = useCallback(() => {
+    setQuotes((prev) => prev.map((quote) =>
+      quote.id === activeQuoteId
+        ? { ...quote, status: "commercial_review" as const }
+        : quote
+    ));
+  }, [activeQuoteId]);
+
+  const handleConfirm = useCallback(() => {
+    setQuotes((prev) => prev.map((quote) =>
+      quote.id === activeQuoteId
+        ? { ...quote, status: "confirmed" as const }
+        : quote
+    ));
+    router.push(`/quote/${activeQuoteId}`);
+  }, [activeQuoteId, router]);
+
+  const handleMessagesChange = useCallback((msgs: Message[]) => {
+    setMessagesByQuote((prev) => ({
+      ...prev,
+      [activeQuoteId]: msgs,
+    }));
+  }, [activeQuoteId]);
+
+  const handleSelectQuote = useCallback((quoteId: string) => {
+    setActiveQuoteId(quoteId);
+  }, []);
+
+  const handleNewConversation = useCallback(() => {
+    const newQuoteId = `quote-${generateId()}`;
+    const newQuote: Quote = {
+      ...initialQuote,
+      id: newQuoteId,
+      number: `Q-2024-${String(quotes.length + 1).padStart(3, "0")}`,
+      items: [],
+      lastIntent: "Nueva conversación",
+    };
+    setQuotes((prev) => [newQuote, ...prev]);
+    setMessagesByQuote((prev) => ({
+      ...prev,
+      [newQuoteId]: [
+        {
+          id: `msg-${generateId()}`,
+          role: "ai",
+          type: "text",
+          content: "¡Hola! Soy tu asistente comercial. ¿Qué producto necesitas cotizar hoy?",
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    }));
+    setActiveQuoteId(newQuoteId);
+  }, [quotes.length]);
+
   return (
-    <div className="min-h-screen py-6 sm:py-8">
-      <main className="ui-page-shell flex min-h-[calc(100vh-3rem)] flex-col justify-center gap-6">
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_24rem]">
-          <motion.section
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-            className="overflow-hidden rounded-[var(--radius-32)] border border-[color:var(--border-default)] bg-[var(--surface-inverse)] text-[var(--text-inverse)] shadow-[var(--shadow-floating)]"
-          >
-            <div className="border-b border-[color:var(--border-inverse-soft)] px-6 py-5 sm:px-8">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-16)] bg-[var(--color-brand-500)] text-[var(--text-inverse)] shadow-[var(--shadow-subtle)]">
-                  <Bot className="h-5 w-5" />
+    <div className="flex h-full flex-col">
+      <div className="ui-page-shell flex h-full flex-col gap-4 py-4">
+        <header className="ui-surface-raised flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-24)] px-4 py-4 sm:px-5">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-12)] bg-[var(--color-brand-500)] text-[var(--text-inverse)]">
+                  <LayoutGrid className="h-4 w-4" />
                 </div>
-                <div className="space-y-1">
-                  <Badge variant="ai" className="w-fit">
-                    Prototipo funcional
-                  </Badge>
-                  <p className="ui-body-sm ui-text-inverse-muted">
-                    QuoteAI - cotizacion B2B conversacional
-                  </p>
-                </div>
+                <h1 className="ui-h3 text-[1.35rem]">Espacio de cotizacion</h1>
+                <Badge variant="outline">{activeQuote.number}</Badge>
+                {activeQuote.status === "commercial_review" && (
+                  <Badge variant="review">Revision comercial</Badge>
+                )}
+                {activeQuote.status === "confirmed" && (
+                  <Badge variant="success">Confirmada</Badge>
+                )}
+              </div>
+              <p className="ui-body-sm">
+                Chat, contexto del cliente y cotizacion activa en un solo workspace.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => router.push("/sales")}>
+              <BarChart3 className="h-3.5 w-3.5" />
+              Dashboard
+            </Button>
+            <Button
+              variant="tertiary"
+              size="icon"
+              className="hidden h-9 w-9 lg:inline-flex"
+              onClick={() => setLeftCollapsed((state) => !state)}
+            >
+              <Users className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-2 rounded-[var(--radius-16)] border border-[color:var(--border-default)] bg-[var(--surface-raised)] px-2.5 py-1.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-brand-500)] text-xs font-semibold text-[var(--text-inverse)]">
+                LM
+              </div>
+              <div className="hidden sm:block">
+                <p className="ui-body-sm text-[var(--text-primary)]">Laura Mendez</p>
+                <p className="ui-body-sm text-[var(--text-muted)]">Vendedora senior</p>
               </div>
             </div>
+          </div>
+        </header>
 
-            <div className="space-y-8 px-6 py-8 sm:px-8 sm:py-10">
-              <div className="max-w-3xl space-y-5">
-                <p className="ui-eyebrow text-[var(--color-brand-200)]">
-                  La propuesta en una frase
-                </p>
-                <h1 className="ui-display text-[var(--text-inverse)]">
-                  Cotiza conversando,
-                  <span className="block text-[var(--color-brand-200)]">
-                    no navegando un catalogo.
-                  </span>
-                </h1>
-                <p className="ui-body ui-text-inverse-muted max-w-2xl">
-                  QuoteAI convierte una conversacion comercial en una experiencia clara:
-                  entiende la necesidad, propone referencias, compara alternativas,
-                  sugiere complementarios y arma la cotizacion sin sacar al usuario del contexto.
-                </p>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-3">
-                {flowHighlights.map((item, index) => {
-                  const Icon = item.icon;
-                  return (
-                    <motion.div
-                      key={item.label}
-                      initial={{ opacity: 0, y: 16 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.08 * (index + 1) }}
-                      className="ui-surface-inverse-panel rounded-[var(--radius-24)] p-4"
-                    >
-                      <div className="ui-surface-inverse-icon mb-3 flex h-11 w-11 items-center justify-center rounded-[var(--radius-16)] text-[var(--color-brand-100)]">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <p className="ui-title text-[var(--text-inverse)]">{item.label}</p>
-                      <p className="ui-body-sm ui-text-inverse-subtle mt-2">
-                        {item.text}
-                      </p>
-                    </motion.div>
-                  );
-                })}
-              </div>
-
-              <div className="ui-surface-inverse-panel rounded-[var(--radius-24)] p-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="brand">Que demuestra este home</Badge>
-                  <span className="ui-body-sm ui-text-inverse-subtle">
-                    Cada boton abre un recorrido distinto del prototipo.
-                  </span>
-                </div>
-                <div className="mt-4 grid gap-3 md:grid-cols-3">
-                  <DemoSignal
-                    icon={CheckCircle2}
-                    title="Continuidad"
-                    description="Desde WhatsApp hasta la web, sin perder la oportunidad."
-                  />
-                  <DemoSignal
-                    icon={FileText}
-                    title="Cotizacion visible"
-                    description="Chat, productos y quote builder trabajando juntos."
-                  />
-                  <DemoSignal
-                    icon={Zap}
-                    title="Accion comercial"
-                    description="Seguimiento, descuentos y estados listos para operar."
-                  />
-                </div>
-              </div>
+        <div className="hidden min-h-0 flex-1 gap-4 lg:flex">
+          {!leftCollapsed && (
+            <div className="w-[20rem] shrink-0">
+              <ConversationSidebar
+                customer={customer}
+                quotes={quotes}
+                activeQuoteId={activeQuoteId}
+                onSelectQuote={handleSelectQuote}
+                onNewConversation={handleNewConversation}
+              />
             </div>
-          </motion.section>
+          )}
 
-          <motion.aside
-            initial={{ opacity: 0, x: 18 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.45, delay: 0.1 }}
-            className="flex flex-col gap-4"
+          <PanelShell
+            title="Asistente comercial IA"
+            badge="Conversacion"
+            badgeTone="ai"
+            className="min-w-0 flex-1"
+            actions={
+              <div className="flex items-center gap-2 text-[var(--text-muted)]">
+                <Sparkles className="h-4 w-4 text-[var(--status-ai-solid)]" />
+                <span className="ui-body-sm">Activo</span>
+              </div>
+            }
           >
-            <Card variant="raised">
-              <CardHeader className="space-y-3 pb-0">
-                <Badge variant="outline" className="w-fit">
-                  Entradas del demo
-                </Badge>
-                <CardTitle className="ui-h3">
-                  Elige que parte de la propuesta quieres mostrar
-                </CardTitle>
-                <p className="ui-body-sm">
-                  No todos los botones hacen lo mismo. Cada uno abre un recorrido distinto para explicar la plataforma.
-                </p>
-              </CardHeader>
+            <ChatWorkspace
+              messages={activeMessages}
+              priceList={customer.priceList}
+              addedProductIds={addedProductIds}
+              onAddToQuote={handleAddToQuote}
+              onMessagesChange={handleMessagesChange}
+              onRequestReview={handleRequestReview}
+            />
+          </PanelShell>
 
-              <CardContent className="space-y-3 pt-4">
-                {journeys.map((journey) => (
-                  <JourneyCard key={journey.href} {...journey} />
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card variant="subtle">
-              <CardContent className="grid gap-3 p-5">
-                <p className="ui-title">
-                  Si estas presentando el producto, este es el orden recomendado:
-                </p>
-                <ol className="space-y-2">
-                  {[
-                    "Empieza por WhatsApp para mostrar continuidad y contexto recuperado.",
-                    "Luego abre el workspace para ensenar la experiencia central de cotizacion.",
-                    "Cierra con dashboard para mostrar impacto y operacion comercial.",
-                  ].map((text, index) => (
-                    <li key={text} className="flex gap-3">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--status-info-surface)] text-xs font-bold text-[var(--status-info-text)]">
-                        {index + 1}
-                      </span>
-                      <span className="ui-body-sm">{text}</span>
-                    </li>
-                  ))}
-                </ol>
-              </CardContent>
-            </Card>
-          </motion.aside>
+          <PanelShell
+            title="Cotizacion activa"
+            badge="Quote"
+            className="w-[22rem] shrink-0"
+          >
+            <QuotePanel
+              quote={activeQuote}
+              onQtyChange={handleQtyChange}
+              onRemoveItem={handleRemoveItem}
+              onDiscountChange={handleDiscountChange}
+              onRequestReview={handleRequestReview}
+              onConfirm={handleConfirm}
+            />
+          </PanelShell>
         </div>
 
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.2 }}
-          className="grid gap-4 lg:grid-cols-3"
-        >
-          {proofPoints.map((point) => {
-            const Icon = point.icon;
-            return (
-              <Card key={point.title} variant="raised">
-                <CardContent className="p-5">
-                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[var(--radius-16)] bg-[var(--surface-inverse)] text-[var(--text-inverse)]">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h2 className="ui-h3 text-[1.15rem]">{point.title}</h2>
-                  <p className="ui-body-sm mt-2">{point.description}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </motion.section>
+        <div className="flex min-h-0 flex-1 lg:hidden">
+          <div className="ui-surface-raised flex min-h-0 flex-1 flex-col rounded-[var(--radius-24)] p-3">
+            <Tabs value={mobileView} onValueChange={setMobileView} className="flex min-h-0 flex-1 flex-col">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="conversations">Conversaciones</TabsTrigger>
+                <TabsTrigger value="chat">Chat</TabsTrigger>
+                <TabsTrigger value="quote">Cotizacion</TabsTrigger>
+              </TabsList>
 
-        <p className="ui-body-sm text-center text-[var(--text-muted)]">
-          Prototipo local con datos mock - Next.js 16 - TypeScript - Tailwind - App Router
-        </p>
-      </main>
+              <TabsContent value="conversations" className="min-h-0 flex-1 overflow-hidden">
+                <ConversationSidebar
+                  customer={customer}
+                  quotes={quotes}
+                  activeQuoteId={activeQuoteId}
+                  onSelectQuote={handleSelectQuote}
+                  onNewConversation={handleNewConversation}
+                />
+              </TabsContent>
+
+              <TabsContent value="chat" className="min-h-0 flex-1 overflow-hidden">
+                <PanelShell
+                  title="Asistente comercial IA"
+                  badge="Conversacion"
+                  badgeTone="ai"
+                  compact
+                  actions={
+                    <div className="flex items-center gap-2 text-[var(--text-muted)]">
+                      <Sparkles className="h-4 w-4 text-[var(--status-ai-solid)]" />
+                      <span className="ui-body-sm">Activo</span>
+                    </div>
+                  }
+                >
+                  <ChatWorkspace
+                    messages={activeMessages}
+                    priceList={customer.priceList}
+                    addedProductIds={addedProductIds}
+                    onAddToQuote={handleAddToQuote}
+                    onMessagesChange={handleMessagesChange}
+                    onRequestReview={handleRequestReview}
+                  />
+                </PanelShell>
+              </TabsContent>
+
+              <TabsContent value="quote" className="min-h-0 flex-1 overflow-hidden">
+                <PanelShell title="Cotizacion activa" badge="Quote" compact>
+                  <QuotePanel
+                    quote={activeQuote}
+                    onQtyChange={handleQtyChange}
+                    onRemoveItem={handleRemoveItem}
+                    onDiscountChange={handleDiscountChange}
+                    onRequestReview={handleRequestReview}
+                    onConfirm={handleConfirm}
+                  />
+                </PanelShell>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-function JourneyCard({
-  href,
-  eyebrow,
+function PanelShell({
   title,
-  description,
-  proof,
-  buttonLabel,
-  icon: Icon,
-  primary = false,
+  badge,
+  badgeTone = "outline",
+  actions,
+  compact = false,
+  className,
+  children,
 }: {
-  href: string;
-  eyebrow: string;
   title: string;
-  description: string;
-  proof: string;
-  buttonLabel: string;
-  icon: LucideIcon;
-  primary?: boolean;
+  badge: string;
+  badgeTone?: "brand" | "neutral" | "ai" | "success" | "warning" | "danger" | "review" | "outline";
+  actions?: React.ReactNode;
+  compact?: boolean;
+  className?: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div
-      className={`rounded-[var(--radius-24)] border p-4 ${
-        primary
-          ? "border-[color:var(--border-accent)] bg-[var(--surface-accent)]"
-          : "border-[color:var(--border-default)] bg-[var(--surface-subtle)]"
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-16)] ${
-            primary
-              ? "bg-[var(--color-brand-500)] text-[var(--text-inverse)]"
-              : "bg-[var(--surface-raised)] text-[var(--text-secondary)]"
-          }`}
-        >
-          <Icon className="h-5 w-5" />
+    <section className={`ui-surface-raised flex min-h-0 flex-col rounded-[var(--radius-24)] ${className ?? ""}`}>
+      <div className={`ui-panel-header ${compact ? "px-4 py-3" : ""}`}>
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={badgeTone}>{badge}</Badge>
+            <p className="ui-title">{title}</p>
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="ui-label">{eyebrow}</p>
-          <h3 className="ui-title mt-2">{title}</h3>
-        </div>
+        {actions}
       </div>
-
-      <p className="ui-body-sm mt-4">{description}</p>
-      <p className="ui-body-sm mt-3 rounded-[var(--radius-16)] bg-[rgba(255,255,255,0.78)] px-3 py-2 text-[var(--text-secondary)]">
-        {proof}
-      </p>
-
-      <Button
-        asChild
-        size="lg"
-        variant={primary ? "primary" : "outline"}
-        className="mt-4 w-full justify-between"
-      >
-        <Link href={href}>
-          {buttonLabel}
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      </Button>
-    </div>
-  );
-}
-
-function DemoSignal({
-  icon: Icon,
-  title,
-  description,
-}: {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="ui-surface-inverse-panel rounded-[var(--radius-16)] p-4">
-      <div className="ui-surface-inverse-icon mb-3 flex h-9 w-9 items-center justify-center rounded-[var(--radius-12)] text-[var(--text-inverse)]">
-        <Icon className="h-4 w-4" />
-      </div>
-      <p className="ui-title text-[var(--text-inverse)]">{title}</p>
-      <p className="ui-body-sm ui-text-inverse-subtle mt-2">{description}</p>
-    </div>
+      <div className="min-h-0 flex-1">{children}</div>
+    </section>
   );
 }

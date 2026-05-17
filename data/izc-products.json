@@ -1,0 +1,322 @@
+{
+  "products": [
+    {
+      "id": "prod-izc-001",
+      "sku": "SRP-F312II",
+      "name": "Impresora Térmica POS BIXOLON SRP-F312II",
+      "brand": "BIXOLON",
+      "model": "SRP-F312II",
+      "category": "impresoras_pos",
+      "description": "Impresora térmica para punto de venta POS con velocidad de impresión hasta 300mm/s. Ideal para retail, restaurantes y comercios. Conexión USB + Ethernet.",
+      "specs": [
+        {"label": "Velocidad", "value": "300 mm/s"},
+        {"label": "Ancho papel", "value": "80 mm"},
+        {"label": "Conectividad", "value": "USB + Ethernet"},
+        {"label": "Resolución", "value": "203 dpi"}
+      ],
+      "basePrice": 450000,
+      "distributorPlusPrice": 380000,
+      "distributorPrice": 410000,
+      "corporatePrice": 430000,
+      "stock": 25,
+      "visibleStock": 20,
+      "warranty": "12 meses",
+      "visibility": "all",
+      "complementaryIds": ["prod-izc-009", "prod-izc-010"],
+      "alternativeIds": ["prod-izc-002", "prod-izc-003"],
+      "volumePrices": [
+        {"minQty": 1, "price": 380000, "label": "1-4 unidades"},
+        {"minQty": 5, "price": 360000, "label": "5-9 unidades"},
+        {"minQty": 10, "price": 340000, "label": "10+ unidades"}
+      ],
+      "tags": ["impresora", "termica", "pos", "bixolon", "recibos"],
+      "badge": "Más vendido",
+      "imageUrl": "https://izc.com.co/pub/media/catalog/product/cache/bb7696f33c0507e199458c931a841b31/i/m/impresora_t_rmica_pos_-_bixolon_srp_f312ii-1_2.jpg"
+    },
+    {
+      "id": "prod-izc-002",
+      "sku": "SAT-15T-US",
+      "name": "Impresora Térmica SAT 15T US",
+      "brand": "SAT",
+      "model": "15T US",
+      "category": "impresoras_pos",
+      "description": "Impresora térmica compacta para punto de venta. Diseño moderno y silencioso. Ideal para comercios minoristas y food service.",
+      "specs": [
+        {"label": "Velocidad", "value": "220 mm/s"},
+        {"label": "Ancho papel", "value": "80 mm"},
+        {"label": "Conectividad", "value": "USB"},
+        {"label": "Vida útil", "value": "100 km"}
+      ],
+      "basePrice": 380000,
+      "distributorPlusPrice": 320000,
+      "distributorPrice": 350000,
+      "corporatePrice": 365000,
+      "stock": 30,
+      "visibleStock": 25,
+      "warranty": "12 meses",
+      "visibility": "all",
+      "complementaryIds": ["prod-izc-009"],
+      "alternativeIds": ["prod-izc-001", "prod-izc-003"],
+      "volumePrices": [
+        {"minQty": 1, "price": 320000, "label": "1-4 unidades"},
+        {"minQty": 5, "price": 305000, "label": "5-9 unidades"},
+        {"minQty": 10, "price": 290000, "label": "10+ unidades"}
+      ],
+      "tags": ["impresora", "termica", "pos", "sat", "recibos"],
+      "imageUrl": "https://izc.com.co/pub/media/catalog/product/cache/bb7696f33c0507e199458c931a841b31/i/m/impresora_t_rmica_pos_-_sat_15tus-1.jpg"
+    },
+    {
+      "id": "prod-izc-003",
+      "sku": "SAT-Q23T-UBW",
+      "name": "Impresora Térmica SAT Q23T UBW",
+      "brand": "SAT",
+      "model": "Q23T UBW",
+      "category": "impresoras_pos",
+      "description": "Impresora térmica portátil con conectividad USB, Bluetooth y WiFi. Ideal para movilidad en punto de venta y meseros.",
+      "specs": [
+        {"label": "Velocidad", "value": "100 mm/s"},
+        {"label": "Ancho papel", "value": "80 mm"},
+        {"label": "Conectividad", "value": "USB + Bluetooth + WiFi"},
+        {"label": "Batería", "value": "2600 mAh"}
+      ],
+      "basePrice": 520000,
+      "distributorPlusPrice": 445000,
+      "distributorPrice": 480000,
+      "corporatePrice": 500000,
+      "stock": 15,
+      "visibleStock": 12,
+      "warranty": "12 meses",
+      "visibility": "all",
+      "complementaryIds": ["prod-izc-010"],
+      "alternativeIds": ["prod-izc-001", "prod-izc-002"],
+      "volumePrices": [
+        {"minQty": 1, "price": 445000, "label": "1-4 unidades"},
+        {"minQty": 5, "price": 425000, "label": "5+ unidades"}
+      ],
+      "tags": ["impresora", "termica", "pos", "sat", "portatil", "bluetooth", "wifi"],
+      "badge": "Portátil",
+      "imageUrl": "https://izc.com.co/pub/media/catalog/product/cache/bb7696f33c0507e199458c931a841b31/i/m/impresora-termica-sat-q23t-ue-1.jpg"
+    },
+    {
+      "id": "prod-izc-004",
+      "sku": "DS2208-SR",
+      "name": "Lector de Código de Barras ZEBRA DS2208",
+      "brand": "Zebra",
+      "model": "DS2208-SR",
+      "category": "lectores_codigo",
+      "description": "Lector de código de barras 1D/2D de mano. Tecnología de imagen avanzada para lectura rápida de códigos dañados o mal impresos.",
+      "specs": [
+        {"label": "Tipo", "value": "1D / 2D"},
+        {"label": "Interfaz", "value": "USB"},
+        {"label": "Lectura", "value": "Omnidireccional"},
+        {"label": "Peso", "value": "147g"}
+      ],
+      "basePrice": 420000,
+      "distributorPlusPrice": 355000,
+      "distributorPrice": 385000,
+      "corporatePrice": 400000,
+      "stock": 40,
+      "visibleStock": 35,
+      "warranty": "12 meses",
+      "visibility": "all",
+      "complementaryIds": ["prod-izc-009"],
+      "alternativeIds": ["prod-izc-005", "prod-izc-006"],
+      "volumePrices": [
+        {"minQty": 1, "price": 355000, "label": "1-4 unidades"},
+        {"minQty": 5, "price": 340000, "label": "5-9 unidades"},
+        {"minQty": 10, "price": 325000, "label": "10+ unidades"}
+      ],
+      "tags": ["lector", "scanner", "2d", "qr", "codigo", "barras", "zebra"],
+      "badge": "Recomendado",
+      "imageUrl": "https://izc.com.co/pub/media/catalog/product/cache/bb7696f33c0507e199458c931a841b31/z/e/zebra_ds_2208_1.jpg"
+    },
+    {
+      "id": "prod-izc-005",
+      "sku": "HH490",
+      "name": "Lector de Código de Barras Honeywell HH490",
+      "brand": "Honeywell",
+      "model": "HH490",
+      "category": "lectores_codigo",
+      "description": "Lector de códigos de barras 2D compacto y ergonómico. Ideal para retail y logística con alto volumen de escaneo.",
+      "specs": [
+        {"label": "Tipo", "value": "1D / 2D"},
+        {"label": "Interfaz", "value": "USB"},
+        {"label": "Velocidad", "value": "270 scans/seg"},
+        {"label": "Peso", "value": "120g"}
+      ],
+      "basePrice": 380000,
+      "distributorPlusPrice": 320000,
+      "distributorPrice": 350000,
+      "corporatePrice": 365000,
+      "stock": 35,
+      "visibleStock": 30,
+      "warranty": "12 meses",
+      "visibility": "all",
+      "complementaryIds": [],
+      "alternativeIds": ["prod-izc-004", "prod-izc-006"],
+      "volumePrices": [
+        {"minQty": 1, "price": 320000, "label": "1-4 unidades"},
+        {"minQty": 5, "price": 305000, "label": "5+ unidades"}
+      ],
+      "tags": ["lector", "scanner", "2d", "honeywell", "codigo", "barras"],
+      "imageUrl": "https://izc.com.co/pub/media/catalog/product/cache/bb7696f33c0507e199458c931a841b31/h/o/honeywell_hh490_1.jpg"
+    },
+    {
+      "id": "prod-izc-006",
+      "sku": "QD2430-BKK1S",
+      "name": "Lector de Código de Barras Datalogic QuickScan QD2430",
+      "brand": "Datalogic",
+      "model": "QD2430",
+      "category": "lectores_codigo",
+      "description": "Lector de códigos de barras 2D con tecnología Green Spot para retroalimentación visual. Diseño ergonómico y duradero.",
+      "specs": [
+        {"label": "Tipo", "value": "1D / 2D"},
+        {"label": "Interfaz", "value": "USB"},
+        {"label": "Velocidad", "value": "300 scans/seg"},
+        {"label": "Peso", "value": "170g"}
+      ],
+      "basePrice": 450000,
+      "distributorPlusPrice": 380000,
+      "distributorPrice": 415000,
+      "corporatePrice": 430000,
+      "stock": 28,
+      "visibleStock": 22,
+      "warranty": "24 meses",
+      "visibility": "all",
+      "complementaryIds": [],
+      "alternativeIds": ["prod-izc-004", "prod-izc-005"],
+      "volumePrices": [
+        {"minQty": 1, "price": 380000, "label": "1-4 unidades"},
+        {"minQty": 5, "price": 365000, "label": "5+ unidades"}
+      ],
+      "tags": ["lector", "scanner", "2d", "datalogic", "quickscan", "codigo", "barras"],
+      "imageUrl": "https://izc.com.co/pub/media/catalog/product/cache/bb7696f33c0507e199458c931a841b31/d/a/datalogic_quickscan_qd2430.jpg"
+    },
+    {
+      "id": "prod-izc-007",
+      "sku": "SAT-LD101R-PLUS",
+      "name": "Lector de Código de Barras SAT LD101R Plus",
+      "brand": "SAT",
+      "model": "LD101R Plus",
+      "category": "lectores_codigo",
+      "description": "Lector de códigos de barras 1D económico y confiable. Ideal para pequeños comercios y puntos de venta.",
+      "specs": [
+        {"label": "Tipo", "value": "1D"},
+        {"label": "Interfaz", "value": "USB"},
+        {"label": "Velocidad", "value": "100 scans/seg"},
+        {"label": "Peso", "value": "135g"}
+      ],
+      "basePrice": 180000,
+      "distributorPlusPrice": 145000,
+      "distributorPrice": 160000,
+      "corporatePrice": 170000,
+      "stock": 50,
+      "visibleStock": 45,
+      "warranty": "12 meses",
+      "visibility": "all",
+      "complementaryIds": [],
+      "alternativeIds": ["prod-izc-008"],
+      "volumePrices": [
+        {"minQty": 1, "price": 145000, "label": "1-9 unidades"},
+        {"minQty": 10, "price": 135000, "label": "10+ unidades"}
+      ],
+      "tags": ["lector", "scanner", "1d", "sat", "codigo", "barras", "economico"],
+      "imageUrl": "https://izc.com.co/pub/media/catalog/product/cache/bb7696f33c0507e199458c931a841b31/l/e/lector-codigo-de-barras-ld101r-2.jpg"
+    },
+    {
+      "id": "prod-izc-008",
+      "sku": "SAT-LI102N+",
+      "name": "Lector de Código de Barras SAT LI102N+",
+      "brand": "SAT",
+      "model": "LI102N+",
+      "category": "lectores_codigo",
+      "description": "Lector de códigos de barras 1D con cable. Diseño ergonómico y resistente para uso intensivo en punto de venta.",
+      "specs": [
+        {"label": "Tipo", "value": "1D"},
+        {"label": "Interfaz", "value": "USB"},
+        {"label": "Velocidad", "value": "123 scans/seg"},
+        {"label": "Cable", "value": "2.5 m"}
+      ],
+      "basePrice": 150000,
+      "distributorPlusPrice": 118000,
+      "distributorPrice": 135000,
+      "corporatePrice": 142000,
+      "stock": 60,
+      "visibleStock": 50,
+      "warranty": "12 meses",
+      "visibility": "all",
+      "complementaryIds": [],
+      "alternativeIds": ["prod-izc-007"],
+      "volumePrices": [
+        {"minQty": 1, "price": 118000, "label": "1-9 unidades"},
+        {"minQty": 10, "price": 110000, "label": "10+ unidades"}
+      ],
+      "tags": ["lector", "scanner", "1d", "sat", "codigo", "barras"],
+      "imageUrl": "https://izc.com.co/pub/media/catalog/product/cache/bb7696f33c0507e199458c931a841b31/l/e/lector-de-codigos-de-barras-sat-li102n_-1.jpg"
+    },
+    {
+      "id": "prod-izc-009",
+      "sku": "RIB-110-74",
+      "name": "Cinta Ribbon Cera SAT 110mm × 74m",
+      "brand": "SAT",
+      "model": "Ribbon Wax 110/74",
+      "category": "cintas_ribbon",
+      "description": "Cinta de cera (wax) 110mm × 74m para impresoras térmicas de transferencia. Caja de 12 unidades. Compatible con impresoras SAT y Bixolon.",
+      "specs": [
+        {"label": "Ancho", "value": "110 mm"},
+        {"label": "Longitud", "value": "74 m"},
+        {"label": "Tipo", "value": "Cera (Wax)"},
+        {"label": "Contenido", "value": "Caja × 12 rollos"}
+      ],
+      "basePrice": 165000,
+      "distributorPlusPrice": 128000,
+      "distributorPrice": 145000,
+      "corporatePrice": 155000,
+      "stock": 180,
+      "visibleStock": 150,
+      "warranty": "N/A",
+      "visibility": "all",
+      "complementaryIds": [],
+      "alternativeIds": [],
+      "volumePrices": [
+        {"minQty": 1, "price": 128000, "label": "1-4 cajas"},
+        {"minQty": 5, "price": 120000, "label": "5-19 cajas"},
+        {"minQty": 20, "price": 112000, "label": "20+ cajas"}
+      ],
+      "tags": ["ribbon", "cinta", "cera", "wax", "110", "74", "consumible"],
+      "imageUrl": ""
+    },
+    {
+      "id": "prod-izc-010",
+      "sku": "ETQ-80-50",
+      "name": "Rollos de Papel Térmico 80×50mm",
+      "brand": "SAT",
+      "model": "Thermal Paper 80x50",
+      "category": "papel_termico",
+      "description": "Rollo de papel térmico 80×50mm para impresoras POS. 50 metros por rollo. Caja de 50 unidades. Ideal para recibos y facturas.",
+      "specs": [
+        {"label": "Medidas", "value": "80 × 50 mm"},
+        {"label": "Longitud", "value": "50 metros"},
+        {"label": "Cantidad", "value": "Caja × 50 rollos"},
+        {"label": "Material", "value": "Papel térmico"}
+      ],
+      "basePrice": 95000,
+      "distributorPlusPrice": 72000,
+      "distributorPrice": 82000,
+      "corporatePrice": 88000,
+      "stock": 300,
+      "visibleStock": 250,
+      "warranty": "N/A",
+      "visibility": "all",
+      "complementaryIds": ["prod-izc-009"],
+      "alternativeIds": [],
+      "volumePrices": [
+        {"minQty": 1, "price": 72000, "label": "1-9 cajas"},
+        {"minQty": 10, "price": 68000, "label": "10-49 cajas"},
+        {"minQty": 50, "price": 64000, "label": "50+ cajas"}
+      ],
+      "tags": ["papel", "termico", "rollo", "pos", "recibos", "consumible"],
+      "imageUrl": ""
+    }
+  ]
+}

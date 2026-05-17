@@ -40,7 +40,7 @@ export function CustomerPanel({ customer }: CustomerPanelProps) {
 
   return (
     <ScrollArea className="h-full">
-      <div className="space-y-5 p-4">
+      <div className="space-y-4 p-4">
         <div className="flex items-start gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-16)] bg-[var(--color-brand-500)] text-[var(--text-inverse)]">
             <Building2 className="h-5 w-5" />

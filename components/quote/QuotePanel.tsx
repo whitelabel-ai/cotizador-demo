@@ -83,7 +83,7 @@ export function QuotePanel({
 
       <Card variant="subtle" className="min-h-0 flex-1">
         <ScrollArea className="h-full">
-          <CardContent className="h-full p-0">
+          <CardContent className="flex h-full flex-col p-0">
             {isEmpty ? (
               <div className="flex h-full flex-col items-center justify-center px-4 py-12 text-center">
                 <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--bg-subtle)] text-[var(--text-muted)]">
@@ -95,7 +95,7 @@ export function QuotePanel({
                 </p>
               </div>
             ) : (
-              <div className="px-4">
+              <div className="flex-1 space-y-2 overflow-y-auto px-4 py-2">
                 {quote.items.map((item) => (
                   <QuoteLineItem
                     key={item.id}
