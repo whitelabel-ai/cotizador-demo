@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   BarChart3,
@@ -81,33 +81,27 @@ export default function HomePage() {
   const router = useRouter();
   const customer = defaultCustomer;
 
-  const [quotes, setQuotes] = useState<Quote[]>(() => {
-    const savedQuotes = loadQuotes();
-    if (savedQuotes.length > 0) {
-      return savedQuotes;
-    }
-    saveQuotes(demoQuotes);
-    Object.entries(demoMessages).forEach(([quoteId, msgs]) => {
-      saveMessages(quoteId, msgs);
-    });
-    return demoQuotes;
-  });
+  const [quotes, setQuotes] = useState<Quote[]>(demoQuotes);
+  const [messagesByQuote, setMessagesByQuote] = useState<Record<string, Message[]>>(demoMessages);
+  const [activeQuoteId, setActiveQuoteId] = useState<string>("quote-001");
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const [messagesByQuote, setMessagesByQuote] = useState<Record<string, Message[]>>(() => {
+  useEffect(() => {
+    const savedQuotes = loadQuotes();
     const savedMessages = loadAllMessages();
-    if (Object.keys(savedMessages).length > 0) {
-      return savedMessages;
-    }
-    return demoMessages;
-  });
 
-  const [activeQuoteId, setActiveQuoteId] = useState<string>(() => {
-    const savedQuotes = loadQuotes();
-    if (savedQuotes.length > 0) {
-      return savedQuotes[0].id;
+    if (savedQuotes.length > 0 && Object.keys(savedMessages).length > 0) {
+      setQuotes(savedQuotes);
+      setMessagesByQuote(savedMessages);
+      setActiveQuoteId(savedQuotes[0].id);
+    } else {
+      saveQuotes(demoQuotes);
+      Object.entries(demoMessages).forEach(([quoteId, msgs]) => {
+        saveMessages(quoteId, msgs);
+      });
     }
-    return "quote-001";
-  });
+    setIsLoaded(true);
+  }, []);
 
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [mobileView, setMobileView] = useState("chat");
