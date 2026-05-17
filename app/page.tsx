@@ -87,21 +87,55 @@ export default function HomePage() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const savedQuotes = loadQuotes();
-    const savedMessages = loadAllMessages();
+    try {
+      const savedQuotes = loadQuotes();
+      const savedMessages = loadAllMessages();
 
-    if (savedQuotes.length > 0 && Object.keys(savedMessages).length > 0) {
-      setQuotes(savedQuotes);
-      setMessagesByQuote(savedMessages);
-      setActiveQuoteId(savedQuotes[0].id);
-    } else {
-      saveQuotes(demoQuotes);
-      Object.entries(demoMessages).forEach(([quoteId, msgs]) => {
-        saveMessages(quoteId, msgs);
+      console.log("[HomePage] Cargando datos:", {
+        savedQuotesCount: savedQuotes.length,
+        savedMessagesCount: Object.keys(savedMessages).length,
       });
+
+      if (savedQuotes.length > 0 && Object.keys(savedMessages).length > 0) {
+        console.log("[HomePage] Usando datos guardados");
+        setQuotes(savedQuotes);
+        setMessagesByQuote(savedMessages);
+        setActiveQuoteId(savedQuotes[0].id);
+      } else {
+        console.log("[HomePage] Inicializando con datos demo");
+        setQuotes(demoQuotes);
+        setMessagesByQuote(demoMessages);
+        setActiveQuoteId("quote-001");
+        setTimeout(() => {
+          saveQuotes(demoQuotes);
+          Object.entries(demoMessages).forEach(([quoteId, msgs]) => {
+            saveMessages(quoteId, msgs);
+          });
+        }, 0);
+      }
+    } catch (error) {
+      console.error("[HomePage] Error cargando datos:", error);
+      setQuotes(demoQuotes);
+      setMessagesByQuote(demoMessages);
+      setActiveQuoteId("quote-001");
     }
     setIsLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (isLoaded && quotes.length > 0) {
+      saveQuotes(quotes);
+    }
+  }, [quotes, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      const currentMessages = messagesByQuote[activeQuoteId] || [];
+      if (currentMessages.length > 0) {
+        saveMessages(activeQuoteId, currentMessages);
+      }
+    }
+  }, [messagesByQuote, activeQuoteId, isLoaded]);
 
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [mobileView, setMobileView] = useState("chat");
