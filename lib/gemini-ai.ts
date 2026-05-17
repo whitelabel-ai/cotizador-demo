@@ -3,7 +3,7 @@ import type { Product } from "@/data/products";
 import { generateId } from "@/lib/utils";
 
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1alpha/models/gemini-3.1-flash-lite:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview-06-17:generateContent";
 
 export interface GeminiAIResponse {
   intent: string;
@@ -28,6 +28,43 @@ function makeAIMsg(
   };
 }
 
+function extractProductFromText(text: string, products: Product[]): Product | null {
+  const lower = text.toLowerCase();
+  
+  // 1. Buscar por SKU (más preciso)
+  const skuMatch = products.find(p => lower.includes(p.sku.toLowerCase()));
+  if (skuMatch) {
+    console.log("[Gemini] SKU match encontrado:", skuMatch.sku);
+    return skuMatch;
+  }
+  
+  // 2. Buscar por nombre completo del producto
+  const nameMatch = products.find(p => lower.includes(p.name.toLowerCase()));
+  if (nameMatch) {
+    console.log("[Gemini] Nombre match encontrado:", nameMatch.name);
+    return nameMatch;
+  }
+  
+  // 3. Buscar por marca + modelo
+  const brandModelMatch = products.find(p => 
+    lower.includes(p.brand.toLowerCase()) && 
+    lower.includes(p.model.toLowerCase())
+  );
+  if (brandModelMatch) {
+    console.log("[Gemini] Marca+Modelo match:", brandModelMatch.brand, brandModelMatch.model);
+    return brandModelMatch;
+  }
+  
+  // 4. Buscar solo por marca (si hay un solo producto de esa marca)
+  const brandMatches = products.filter(p => lower.includes(p.brand.toLowerCase()));
+  if (brandMatches.length === 1) {
+    console.log("[Gemini] Solo marca match:", brandMatches[0].brand);
+    return brandMatches[0];
+  }
+  
+  return null;
+}
+
 export async function callGeminiAPI(
   userText: string,
   messages: Message[],
@@ -44,46 +81,38 @@ export async function callGeminiAPI(
     .join("\n");
 
   const productsContext = products
-    .slice(0, 10)
     .map(
       (p) =>
-        `SKU: ${p.sku} | Nombre: ${p.name} | Marca: ${p.brand} | Precio: $${p.distributorPlusPrice.toLocaleString()} | Tags: ${p.tags.join(", ")}`
+        `ID: ${p.id} | SKU: ${p.sku} | Nombre: ${p.name} | Marca: ${p.brand} | Precio: $${p.distributorPlusPrice.toLocaleString()} | Tags: ${p.tags.join(", ")}`
     )
     .join("\n");
 
-  const prompt = `Eres un asistente comercial B2B especializado en productos de IZC Mayorista.
+  const prompt = `Asistente comercial IZC Mayorista.
 
 PRODUCTOS DISPONIBLES:
 ${productsContext}
 
-HISTORIAL:
-${conversationHistory}
+HISTORIAL: ${conversationHistory}
 
 USUARIO DICE: "${userText}"
 
-INSTRUCCIONES:
-1. Responde en español de forma natural y comercial
-2. SI el usuario pregunta por un producto específico o quiere ver detalles → DEBES usar showProductCard: true
-3. Si solo es saludo o pregunta general → showProductCard: false
+REGLAS CRÍTICAS:
+1. Si das PRECIO, STOCK, o DETALLES de un producto → showProductCard: true
+2. Si solo saludas o hablas general → showProductCard: false
+3. SIEMPRE incluye productId si mencionas un producto específico
 
-FORMATO DE RESPUESTA OBLIGATORIO (JSON):
+JSON OBLIGATORIO:
 {
   "intent": "find_product" | "show_alternatives" | "show_complementary" | "request_discount" | "greeting" | "unknown",
   "responseText": "tu respuesta en español",
-  "productId": "id del producto o null",
-  "showProductCard": true | false
+  "productId": "prod-izc-XXX" o null,
+  "showProductCard": true o false
 }
 
-REGLAS CRÍTICAS:
-- Si mencionas un producto POR NOMBRE o SKU → showProductCard: true
-- Si el usuario dice "muéstrame", "quiero ver", "dame información" de un producto → showProductCard: true
-- Si el usuario pregunta "tienes X?" o "qué hay de X?" → showProductCard: true
-- Solo showProductCard: false para saludos o preguntas muy generales
-
 EJEMPLOS:
-- "dame info de la portátil" → {"intent": "find_product", "responseText": "La impresora portátil es...", "productId": "prod-izc-003", "showProductCard": true}
-- "tienes lectores zebra?" → {"intent": "find_product", "responseText": "Sí, tenemos...", "productId": "prod-izc-004", "showProductCard": true}
-- "hola, qué tal?" → {"intent": "greeting", "responseText": "¡Hola! ¿En qué puedo ayudarte?", "showProductCard": false}
+- "el ZEBRA DS2208 cuesta $355,000" → {"productId": "prod-izc-004", "showProductCard": true}
+- "tienes impresoras BIXOLON?" → {"productId": "prod-izc-001", "showProductCard": true}
+- "hola, qué tal?" → {"intent": "greeting", "showProductCard": false}
 
 RESPONDE SOLO JSON:`;
 
@@ -125,41 +154,55 @@ RESPONDE SOLO JSON:`;
       throw new Error("Respuesta vacía de Gemini API");
     }
 
+    console.log("[Gemini] Raw response:", candidate.content.parts[0].text);
+    
     const geminiResponse = JSON.parse(candidate.content.parts[0].text);
+    console.log("[Gemini] Parsed response:", geminiResponse);
 
     const aiMessage = makeAIMsg(geminiResponse.responseText);
 
     let additionalMessages: Message[] = [];
 
-    // Si Gemini quiere mostrar una tarjeta de producto
-    if (geminiResponse.showProductCard && geminiResponse.productId) {
+    // Matching automático: si Gemini no envió productId pero mencionó un producto
+    if (!geminiResponse.productId) {
+      const mentionedProduct = extractProductFromText(geminiResponse.responseText, products);
+      if (mentionedProduct) {
+        console.log("[Gemini] Auto-match producto:", mentionedProduct.id, mentionedProduct.name);
+        geminiResponse.productId = mentionedProduct.id;
+        geminiResponse.showProductCard = true;
+      }
+    }
+
+    // Si hay productId y showProductCard es true (o no está definido pero hay producto)
+    if (geminiResponse.productId && (geminiResponse.showProductCard || geminiResponse.showProductCard === undefined)) {
+      console.log("[Gemini] Creando product_card para:", geminiResponse.productId);
       additionalMessages.push(
         makeAIMsg(`Producto: ${products.find((p) => p.id === geminiResponse.productId)?.name || ""}`, "product_card", {
           productId: geminiResponse.productId,
         })
       );
-    } else if (geminiResponse.intent === "find_product" && geminiResponse.productId) {
-      // Fallback para find_product sin showProductCard explícito
-      additionalMessages.push(
-        makeAIMsg(`Producto cargado: ${products.find((p) => p.id === geminiResponse.productId)?.name || ""}`, "product_card", {
-          productId: geminiResponse.productId,
-        })
-      );
-    } else if (geminiResponse.intent === "show_alternatives" && geminiResponse.productIds) {
+    }
+    
+    if (geminiResponse.intent === "show_alternatives" && geminiResponse.productIds) {
+      console.log("[Gemini] Creando product_comparison");
       additionalMessages.push(
         makeAIMsg("Comparador de alternativas", "product_comparison", {
           productIds: geminiResponse.productIds,
         })
       );
     } else if (geminiResponse.intent === "show_complementary" && geminiResponse.productIds) {
+      console.log("[Gemini] Creando complementary_products");
       additionalMessages.push(
         makeAIMsg("Complementarios sugeridos", "complementary_products", {
           productIds: geminiResponse.productIds,
         })
       );
     } else if (geminiResponse.intent === "request_discount") {
+      console.log("[Gemini] Creando commercial_review");
       additionalMessages.push(makeAIMsg("Solicitud de descuento registrada", "commercial_review"));
     }
+
+    console.log("[Gemini] Messages finales:", [aiMessage, ...additionalMessages]);
 
     return {
       intent: geminiResponse.intent,

@@ -70,7 +70,10 @@ export function ChatWorkspace({
     }
 
     try {
+      console.log("[ChatWorkspace] Enviando a Gemini:", text);
       const response = await callGeminiAPI(text, messages, products, lastProductId);
+      console.log("[ChatWorkspace] Respuesta de Gemini:", response);
+      console.log("[ChatWorkspace] Mensajes a renderizar:", response.messages);
       setIsTyping(false);
       onMessagesChange([...messages, userMsg, ...response.messages]);
     } catch (error) {
@@ -100,8 +103,12 @@ export function ChatWorkspace({
       <ScrollArea className="flex-1">
         <div className="space-y-4 px-4 py-4">
           {messages.map((msg) => {
+            console.log("[ChatWorkspace] Renderizando mensaje:", msg.type, msg.productId);
+            
             if (msg.type === "product_card" && msg.productId) {
               const product = getProductById(msg.productId);
+              console.log("[ChatWorkspace] ProductCard producto:", product?.name);
+              
               if (!product) return null;
 
               return (
