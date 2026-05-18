@@ -23,7 +23,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { defaultCustomer } from "@/data/customers";
@@ -65,7 +64,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
   const customer = defaultCustomer;
   const priceList = customer.priceList;
 
+  console.log("[ProductPage] SKU from params:", sku);
+  console.log("[ProductPage] Product found:", product?.name);
+
   if (!product) {
+    console.error("[ProductPage] Producto no encontrado:", sku);
     return (
       <div className="min-h-screen py-6">
         <div className="ui-page-shell flex min-h-[70vh] items-center justify-center">
@@ -102,7 +105,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
   ] as const;
 
   return (
-    <ScrollArea className="min-h-screen">
+    <div className="min-h-screen">
       <div className="py-4 sm:py-6">
         <div className="ui-page-shell space-y-6">
         <header className="ui-surface-raised flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-24)] px-4 py-4">
@@ -523,7 +526,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
         </section>
         </div>
       </div>
-    </ScrollArea>
+    </div>
   );
 }
 

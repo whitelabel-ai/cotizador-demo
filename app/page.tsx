@@ -319,8 +319,8 @@ export default function HomePage() {
   }, [quotes.length]);
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="ui-page-shell flex h-full flex-col gap-4 py-4">
+    <div className="flex h-screen flex-col overflow-hidden">
+      <div className="ui-page-shell flex flex-1 flex-col gap-4 py-4 min-h-0">
         <header className="ui-surface-raised flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-24)] px-4 py-4 sm:px-5">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <div className="space-y-1">
