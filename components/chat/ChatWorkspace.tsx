@@ -103,11 +103,8 @@ export function ChatWorkspace({
       <ScrollArea className="flex-1">
         <div className="space-y-4 px-4 py-4">
           {messages.map((msg) => {
-            console.log("[ChatWorkspace] Renderizando mensaje:", msg.type, msg.productId);
-            
             if (msg.type === "product_card" && msg.productId) {
               const product = getProductById(msg.productId);
-              console.log("[ChatWorkspace] ProductCard producto:", product?.name);
               
               if (!product) return null;
 

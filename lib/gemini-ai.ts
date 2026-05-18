@@ -161,7 +161,7 @@ RESPONDE SOLO JSON:`;
 
     const aiMessage = makeAIMsg(geminiResponse.responseText);
 
-    let additionalMessages: Message[] = [];
+    const additionalMessages: Message[] = [];
 
     // Matching automático: si Gemini no envió productId pero mencionó un producto
     if (!geminiResponse.productId) {

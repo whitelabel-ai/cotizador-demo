@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   BarChart3,
@@ -20,6 +20,16 @@ import { initialQuote, salesDashboardQuotes } from "@/data/quotes";
 import { getProductById } from "@/data/products";
 import { resolveUnitPrice } from "@/lib/pricing-engine";
 import { generateId } from "@/lib/utils";
+import {
+  saveQuotes,
+  saveMessages,
+  deleteQuote,
+  duplicateQuote as duplicateQuoteStorage,
+  clearAll,
+  loadQuotes,
+  loadMessages,
+  loadAllMessages,
+} from "@/lib/storage";
 import type { Message } from "@/data/conversations";
 import type { Product } from "@/data/products";
 import type { Quote, QuoteLineItem } from "@/data/quotes";
@@ -43,40 +53,96 @@ const demoQuotes: Quote[] = [
   },
 ];
 
+const demoMessages: Record<string, Message[]> = {
+  "quote-001": initialConversation.messages,
+  "quote-002": salesDashboardQuotes[0].items.length > 0
+    ? [
+        {
+          id: "msg-existing-1",
+          role: "ai",
+          type: "text",
+          content: "Cotización Q-2024-0924 creada con 5 unidades de LD101.",
+          timestamp: new Date().toISOString(),
+        },
+      ]
+    : [],
+  "quote-003": [
+    {
+      id: "msg-existing-2",
+      role: "ai",
+      type: "text",
+      content: "Cotización Q-2024-0921 en revisión comercial.",
+      timestamp: new Date().toISOString(),
+    },
+  ],
+};
+
 export default function HomePage() {
   const router = useRouter();
   const customer = defaultCustomer;
 
   const [quotes, setQuotes] = useState<Quote[]>(demoQuotes);
+  const [messagesByQuote, setMessagesByQuote] = useState<Record<string, Message[]>>(demoMessages);
   const [activeQuoteId, setActiveQuoteId] = useState<string>("quote-001");
-  const [messagesByQuote, setMessagesByQuote] = useState<Record<string, Message[]>>({
-    "quote-001": initialConversation.messages,
-    "quote-002": salesDashboardQuotes[0].items.length > 0 ? [
-      {
-        id: "msg-existing-1",
-        role: "ai",
-        type: "text",
-        content: "Cotización Q-2024-0924 creada con 5 unidades de LD101.",
-        timestamp: new Date().toISOString(),
-      },
-    ] : [],
-    "quote-003": [
-      {
-        id: "msg-existing-2",
-        role: "ai",
-        type: "text",
-        content: "Cotización Q-2024-0921 en revisión comercial.",
-        timestamp: new Date().toISOString(),
-      },
-    ],
-  });
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedQuotes = loadQuotes();
+      const savedMessages = loadAllMessages();
+
+      console.log("[HomePage] Cargando datos:", {
+        savedQuotesCount: savedQuotes.length,
+        savedMessagesCount: Object.keys(savedMessages).length,
+      });
+
+      if (savedQuotes.length > 0 && Object.keys(savedMessages).length > 0) {
+        console.log("[HomePage] Usando datos guardados");
+        setQuotes(savedQuotes);
+        setMessagesByQuote(savedMessages);
+        setActiveQuoteId(savedQuotes[0].id);
+      } else {
+        console.log("[HomePage] Inicializando con datos demo");
+        setQuotes(demoQuotes);
+        setMessagesByQuote(demoMessages);
+        setActiveQuoteId("quote-001");
+        setTimeout(() => {
+          saveQuotes(demoQuotes);
+          Object.entries(demoMessages).forEach(([quoteId, msgs]) => {
+            saveMessages(quoteId, msgs);
+          });
+        }, 0);
+      }
+    } catch (error) {
+      console.error("[HomePage] Error cargando datos:", error);
+      setQuotes(demoQuotes);
+      setMessagesByQuote(demoMessages);
+      setActiveQuoteId("quote-001");
+    }
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded && quotes.length > 0) {
+      saveQuotes(quotes);
+    }
+  }, [quotes, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      const currentMessages = messagesByQuote[activeQuoteId] || [];
+      if (currentMessages.length > 0) {
+        saveMessages(activeQuoteId, currentMessages);
+      }
+    }
+  }, [messagesByQuote, activeQuoteId, isLoaded]);
 
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [mobileView, setMobileView] = useState("chat");
 
-  const activeQuote = quotes.find((q) => q.id === activeQuoteId) || quotes[0];
-  const activeMessages = messagesByQuote[activeQuoteId] || [];
-  const addedProductIds = activeQuote.items.map((item) => item.productId);
+  const activeQuote = quotes.find((q) => q.id === activeQuoteId) || quotes[0] || demoQuotes[0];
+  const activeMessages = messagesByQuote[activeQuoteId] || demoMessages["quote-001"] || [];
+  const addedProductIds = activeQuote?.items?.map((item) => item.productId) || [];
 
   const handleAddToQuote = useCallback((product: Product, qty: number, unitPrice: number) => {
     setQuotes((prev) => prev.map((quote) => {
@@ -175,6 +241,58 @@ export default function HomePage() {
     setActiveQuoteId(quoteId);
   }, []);
 
+  const handleDeleteQuote = useCallback((quoteId: string) => {
+    deleteQuote(quoteId);
+    setQuotes((prev) => {
+      const filtered = prev.filter((q) => q.id !== quoteId);
+      if (activeQuoteId === quoteId && filtered.length > 0) {
+        setActiveQuoteId(filtered[0].id);
+      }
+      return filtered;
+    });
+    setMessagesByQuote((prev) => {
+      const newMessages: Record<string, Message[]> = {};
+      Object.keys(prev).forEach((key) => {
+        if (key !== quoteId) {
+          newMessages[key] = prev[key];
+        }
+      });
+      return newMessages;
+    });
+  }, [activeQuoteId]);
+
+  const handleDuplicateQuote = useCallback((quoteId: string) => {
+    const newQuote = duplicateQuoteStorage(quoteId);
+    if (newQuote) {
+      setQuotes((prev) => [newQuote, ...prev]);
+      setActiveQuoteId(newQuote.id);
+      const originalMessages = loadMessages(quoteId);
+      if (originalMessages.length > 0) {
+        setMessagesByQuote((prev) => ({
+          ...prev,
+          [newQuote.id]: [
+            {
+              id: `msg-${Date.now()}`,
+              role: "ai",
+              type: "text",
+              content: `Cotización duplicada de ${quotes.find((q) => q.id === quoteId)?.number}.`,
+              timestamp: new Date().toISOString(),
+            },
+          ],
+        }));
+      }
+    }
+  }, [quotes]);
+
+  const handleClearAll = useCallback(() => {
+    if (confirm("¿Estás seguro de que quieres borrar todas las cotizaciones y conversaciones? Esta acción no se puede deshacer.")) {
+      clearAll();
+      setQuotes(demoQuotes);
+      setMessagesByQuote(demoMessages);
+      setActiveQuoteId("quote-001");
+    }
+  }, []);
+
   const handleNewConversation = useCallback(() => {
     const newQuoteId = `quote-${generateId()}`;
     const newQuote: Quote = {
@@ -201,8 +319,8 @@ export default function HomePage() {
   }, [quotes.length]);
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="ui-page-shell flex h-full flex-col gap-4 py-4">
+    <div className="flex h-screen flex-col overflow-hidden">
+      <div className="ui-page-shell flex flex-1 flex-col gap-4 py-4 min-h-0">
         <header className="ui-surface-raised flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-24)] px-4 py-4 sm:px-5">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <div className="space-y-1">
@@ -259,6 +377,9 @@ export default function HomePage() {
                 activeQuoteId={activeQuoteId}
                 onSelectQuote={handleSelectQuote}
                 onNewConversation={handleNewConversation}
+                onDeleteQuote={handleDeleteQuote}
+                onDuplicateQuote={handleDuplicateQuote}
+                onClearAll={handleClearAll}
               />
             </div>
           )}
@@ -292,6 +413,7 @@ export default function HomePage() {
           >
             <QuotePanel
               quote={activeQuote}
+              customer={customer}
               onQtyChange={handleQtyChange}
               onRemoveItem={handleRemoveItem}
               onDiscountChange={handleDiscountChange}
@@ -317,6 +439,9 @@ export default function HomePage() {
                   activeQuoteId={activeQuoteId}
                   onSelectQuote={handleSelectQuote}
                   onNewConversation={handleNewConversation}
+                  onDeleteQuote={handleDeleteQuote}
+                  onDuplicateQuote={handleDuplicateQuote}
+                  onClearAll={handleClearAll}
                 />
               </TabsContent>
 
@@ -348,6 +473,7 @@ export default function HomePage() {
                 <PanelShell title="Cotizacion activa" badge="Quote" compact>
                   <QuotePanel
                     quote={activeQuote}
+                    customer={customer}
                     onQtyChange={handleQtyChange}
                     onRemoveItem={handleRemoveItem}
                     onDiscountChange={handleDiscountChange}
