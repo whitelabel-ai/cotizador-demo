@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { defaultCustomer } from "@/data/customers";
@@ -101,8 +102,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
   ] as const;
 
   return (
-    <div className="min-h-screen py-4 sm:py-6">
-      <div className="ui-page-shell space-y-6">
+    <ScrollArea className="min-h-screen">
+      <div className="py-4 sm:py-6">
+        <div className="ui-page-shell space-y-6">
         <header className="ui-surface-raised flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-24)] px-4 py-4">
           <Button variant="tertiary" size="sm" className="gap-1.5" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
@@ -519,8 +521,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
               })}
           </div>
         </section>
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   );
 }
 
